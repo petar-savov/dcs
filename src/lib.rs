@@ -46,6 +46,17 @@ impl DCS {
         Ok(list.len())
     }
 
+    pub fn list_push_multi(
+        &self,
+        key: String,
+        values: Vec<String>,
+    ) -> Result<usize, PoisonError<RwLockWriteGuard<HashMap<String, Vec<String>>>>> {
+        let mut list_store = self.list_store.write()?;
+        let list = list_store.entry(key).or_insert_with(Vec::new);
+        list.extend(values);
+        Ok(list.len())
+    }
+
     pub fn list_pop(
         &self,
         key: &str,
@@ -104,5 +115,17 @@ mod tests {
         dcs.list_push("list1".to_string(), "value2".to_string())
             .unwrap();
         assert_eq!(dcs.list_len("list1").unwrap(), 2);
+    }
+
+    #[test]
+    fn test_list_push_multi() {
+        let dcs = DCS::new();
+        let values = vec![
+            "value1".to_string(),
+            "value2".to_string(),
+            "value3".to_string(),
+        ];
+        dcs.list_push_multi("list1".to_string(), values).unwrap();
+        assert_eq!(dcs.list_len("list1").unwrap(), 3);
     }
 }
